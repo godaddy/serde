@@ -27,7 +27,6 @@ note: required by a bound in `assert_ser_tokens`
  --> $CARGO/serde_test-$VERSION/src/assert.rs
   |
   | pub fn assert_ser_tokens<T>(value: &T, tokens: &[Token])
-  |        ----------------- required by a bound in this function
   | where
   |     T: ?Sized + Serialize,
   |                 ^^^^^^^^^ required by this bound in `assert_ser_tokens`
@@ -61,7 +60,6 @@ note: required by a bound in `assert_de_tokens`
  --> $CARGO/serde_test-$VERSION/src/assert.rs
   |
   | pub fn assert_de_tokens<'de, T>(value: &T, tokens: &'de [Token])
-  |        ---------------- required by a bound in this function
   | where
   |     T: Deserialize<'de> + PartialEq + Debug,
   |        ^^^^^^^^^^^^^^^^ required by this bound in `assert_de_tokens`
@@ -79,7 +77,6 @@ note: required by a bound in `assert_de_tokens`
  --> $CARGO/serde_test-$VERSION/src/assert.rs
   |
   | pub fn assert_de_tokens<'de, T>(value: &T, tokens: &'de [Token])
-  |        ---------------- required by a bound in this function
   | where
   |     T: Deserialize<'de> + PartialEq + Debug,
   |                           ^^^^^^^^^ required by this bound in `assert_de_tokens`
@@ -101,7 +98,6 @@ note: required by a bound in `assert_de_tokens`
  --> $CARGO/serde_test-$VERSION/src/assert.rs
   |
   | pub fn assert_de_tokens<'de, T>(value: &T, tokens: &'de [Token])
-  |        ---------------- required by a bound in this function
   | where
   |     T: Deserialize<'de> + PartialEq + Debug,
   |                                       ^^^^^ required by this bound in `assert_de_tokens`

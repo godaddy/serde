@@ -27,7 +27,6 @@ note: required by a bound in `to_string`
   --> tests/ui/unimplemented/required_locally.rs:6:8
    |
  4 | fn to_string<T>(_: &T) -> String
-   |    --------- required by a bound in this function
  5 | where
  6 |     T: Serialize,
    |        ^^^^^^^^^ required by this bound in `to_string`
@@ -59,7 +58,6 @@ note: required by a bound in `from_str`
   --> tests/ui/unimplemented/required_locally.rs:13:8
    |
 11 | fn from_str<'de, T>(_: &'de str) -> T
-   |    -------- required by a bound in this function
 12 | where
 13 |     T: Deserialize<'de>,
    |        ^^^^^^^^^^^^^^^^ required by this bound in `from_str`
