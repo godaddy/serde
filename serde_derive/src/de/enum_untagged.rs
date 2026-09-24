@@ -28,20 +28,11 @@ pub(super) fn deserialize(
     let attempts = variants
         .iter()
         .filter(|variant| !variant.attrs.skip_deserializing())
-        .map(|variant| {
-            let de_any = Expr(deserialize_variant(params, variant, cattrs));
-            let variant_name = variant.ident.to_string();
-            quote! {
-                _serde::#private::Result::map_err(
-                    #de_any,
-                    |e| -> __D::Error {
-                        _serde::de::Error::custom(
-                            ::std::format!("attempted to deserialize `{}` but failed with: {}", #variant_name, ::std::string::ToString::to_string(&e))
-                        )
-                    },
-                )
-            }
-        });
+        .map(|variant| Expr(deserialize_variant(params, variant, cattrs)));
+    let variant_names = variants
+        .iter()
+        .filter(|variant| !variant.attrs.skip_deserializing())
+        .map(|variant| variant.ident.to_string());
     // TODO this message could be better by saving the errors from the failed
     // attempts. The heuristic used by TOML was to count the number of fields
     // processed before an error, and use the error that happened after the
@@ -59,7 +50,7 @@ pub(super) fn deserialize(
     quote_block! {
         let __content = _serde::de::DeserializeSeed::deserialize(_serde::#private::de::ContentVisitor::new(), __deserializer)?;
         let __deserializer = _serde::#private::de::ContentRefDeserializer::<__D::Error>::new(&__content);
-        let mut fallthrough_msg = ::std::string::ToString::to_string(#fallthrough_msg);
+        let mut __fallthrough_msg = _serde::#private::ToString::to_string(#fallthrough_msg);
 
         #first_attempt
 
@@ -68,14 +59,16 @@ pub(super) fn deserialize(
                 _serde::#private2::Ok(__ok) => return _serde::#private2::Ok(__ok),
                 _serde::#private2::Err(__err) => {
                     if !#has_custom_err_msg {
-                        fallthrough_msg.push_str("\n\t- ");
-                        fallthrough_msg.push_str(&::std::string::ToString::to_string(&__err));
+                        __fallthrough_msg.push_str("\n\t- attempted to deserialize `");
+                        __fallthrough_msg.push_str(#variant_names);
+                        __fallthrough_msg.push_str("` but failed with: ");
+                        __fallthrough_msg.push_str(&_serde::#private2::ToString::to_string(&__err));
                     }
                 }
             }
         )*
 
-        _serde::#private::Err(_serde::de::Error::custom(fallthrough_msg))
+        _serde::#private::Err(_serde::de::Error::custom(__fallthrough_msg))
     }
 }
 
