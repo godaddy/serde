@@ -18,7 +18,10 @@
     clippy::ptr_arg,
     clippy::too_many_lines,
     clippy::trivially_copy_pass_by_ref,
-    clippy::type_repetition_in_bounds
+    clippy::type_repetition_in_bounds,
+    // We use lots of declarations inside function bodies to avoid conflicts,
+    // but they aren't used. We just want to make sure they compile.
+    dead_code,
 )]
 #![deny(clippy::collection_is_never_read)]
 
@@ -689,6 +692,7 @@ fn test_gen() {
 
     #[derive(Serialize, Deserialize)]
     #[serde(untagged)]
+    #[allow(dead_code)]
     pub enum UntaggedNewtypeVariantWith {
         Newtype(
             #[serde(serialize_with = "ser_x")]
@@ -699,6 +703,7 @@ fn test_gen() {
 
     #[derive(Serialize, Deserialize)]
     #[serde(transparent)]
+    #[allow(dead_code)]
     pub struct TransparentWith {
         #[serde(serialize_with = "ser_x")]
         #[serde(deserialize_with = "de_x")]
@@ -707,6 +712,7 @@ fn test_gen() {
 
     #[derive(Deserialize)]
     #[serde(untagged)]
+    #[allow(dead_code)]
     pub enum UntaggedWithBorrow<'a> {
         Single(
             #[serde(borrow)]

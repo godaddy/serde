@@ -13,7 +13,7 @@
 //!
 //! [https://serde.rs/derive.html]: https://serde.rs/derive.html
 
-#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.219")]
+#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.229")]
 #![cfg_attr(not(check_cfg), allow(unexpected_cfgs))]
 // Ignored clippy lints
 #![allow(
@@ -75,6 +75,8 @@ extern crate proc_macro;
 mod internals;
 
 use proc_macro::TokenStream;
+use proc_macro2::{Ident, Span};
+use quote::{ToTokens, TokenStreamExt as _};
 use syn::parse_macro_input;
 use syn::DeriveInput;
 
@@ -84,10 +86,29 @@ mod bound;
 mod fragment;
 
 mod de;
+mod deprecated;
 mod dummy;
 mod pretend;
 mod ser;
 mod this;
+
+#[allow(non_camel_case_types)]
+struct private;
+
+impl private {
+    fn ident(&self) -> Ident {
+        Ident::new(
+            concat!("__private", env!("CARGO_PKG_VERSION_PATCH")),
+            Span::call_site(),
+        )
+    }
+}
+
+impl ToTokens for private {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        tokens.append(self.ident());
+    }
+}
 
 #[proc_macro_derive(Serialize, attributes(serde))]
 pub fn derive_serialize(input: TokenStream) -> TokenStream {

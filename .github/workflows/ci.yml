@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - run: cd test_suite && cargo test --features unstable
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: Cargo.lock
@@ -33,7 +33,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - run: cd test_suite && cargo test --features unstable -- --skip ui --exact
 
@@ -46,7 +46,7 @@ jobs:
         rust: [stable, beta]
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust}}
@@ -63,14 +63,14 @@ jobs:
         os: [ubuntu, windows]
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - run: cd serde && cargo build
       - run: cd serde && cargo build --no-default-features
       - run: cd serde && cargo build --no-default-features --features alloc
       - run: cd serde && cargo build --no-default-features --features rc,alloc
       - run: cd serde && cargo build --no-default-features --features unstable
-      - run: cd serde && cargo test --features derive,rc,unstable
+      - run: cd serde_core && cargo test --features rc,unstable
       - run: cd test_suite/no_std && cargo build
         if: matrix.os != 'windows'
       - run: cd serde_derive && cargo check --tests
@@ -87,7 +87,7 @@ jobs:
         rust: [1.56.0, 1.60.0]
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{matrix.rust}}
@@ -98,16 +98,16 @@ jobs:
       - run: cd serde && cargo build
 
   derive:
-    name: Rust 1.61.0
+    name: Rust 1.71.0
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.61.0
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@1.71.0
       - run: |
           sed -i 's/proc-macro2 = { workspace = true/proc-macro2 = { version = "1"/' serde_derive*/Cargo.toml
           sed -i 's/quote = { workspace = true/quote = { version = "1"/' serde_derive*/Cargo.toml
-          sed -i 's/syn = { workspace = true/syn = { version = "2"/' serde_derive*/Cargo.toml
+          sed -i 's/syn = { workspace = true/syn = { version = "3"/' serde_derive*/Cargo.toml
       - run: cd serde && cargo check --no-default-features
       - run: cd serde && cargo check
       - run: cd serde_derive && cargo check
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - run: cargo generate-lockfile -Z minimal-versions
       - run: cargo check --locked --workspace
@@ -129,10 +129,11 @@ jobs:
     env:
       RUSTDOCFLAGS: -Dwarnings
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
       - uses: dtolnay/install@cargo-docs-rs
       - run: cargo docs-rs -p serde
+      - run: cargo docs-rs -p serde_core
       - run: cargo docs-rs -p serde_derive
       - run: cargo docs-rs -p serde_derive_internals
 
@@ -142,9 +143,10 @@ jobs:
     if: github.event_name != 'pull_request'
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@clippy
       - run: cd serde && cargo clippy --features rc,unstable -- -Dclippy::all -Dclippy::pedantic
+      - run: cd serde_core && cargo clippy --features rc,unstable -- -Dclippy::all -Dclippy::pedantic
       - run: cd serde_derive && cargo clippy -- -Dclippy::all -Dclippy::pedantic
       - run: cd serde_derive_internals && cargo clippy -- -Dclippy::all -Dclippy::pedantic
       - run: cd test_suite && cargo clippy --tests --features unstable -- -Dclippy::all -Dclippy::pedantic
@@ -155,12 +157,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@miri
-        with:
-          toolchain: nightly-2025-05-16  # https://github.com/rust-lang/miri/issues/4323
       - run: cargo miri setup
-      - run: cd serde && cargo miri test --features derive,rc,unstable
+      - run: cd serde_core && cargo miri test --features rc,unstable
         env:
           MIRIFLAGS: -Zmiri-strict-provenance
       - run: cd test_suite && cargo miri test --features unstable
@@ -173,7 +173,7 @@ jobs:
     if: github.event_name != 'pull_request'
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: dtolnay/install@cargo-outdated
       - run: cargo outdated --workspace --exit-code 1

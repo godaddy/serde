@@ -4,11 +4,10 @@ use crate::de::{
     Deserialize, Deserializer, EnumAccess, Error, MapAccess, SeqAccess, Unexpected, VariantAccess,
     Visitor,
 };
-
-use crate::seed::InPlaceSeed;
+use crate::private::{self, InPlaceSeed};
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-use crate::de::size_hint;
+use crate::private::size_hint;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1048,16 +1047,16 @@ macro_rules! seq_impl {
                     }
 
                     #[inline]
-                    fn visit_seq<A>(mut self, mut $access: A) -> Result<Self::Value, A::Error>
+                    fn visit_seq<A>(self, mut $access: A) -> Result<Self::Value, A::Error>
                     where
                         A: SeqAccess<'de>,
                     {
-                        $clear(&mut self.0);
-                        $reserve(&mut self.0, size_hint::cautious::<T>($access.size_hint()));
+                        $clear(&mut *self.0);
+                        $reserve(&mut *self.0, size_hint::cautious::<T>($access.size_hint()));
 
                         // FIXME: try to overwrite old values here? (Vec, VecDeque, LinkedList)
                         while let Some(value) = tri!($access.next_element()) {
-                            $insert(&mut self.0, value);
+                            $insert(&mut *self.0, value);
                         }
 
                         Ok(())
@@ -2174,7 +2173,7 @@ impl<'de> Deserialize<'de> for Duration {
                             b"secs" => Ok(Field::Secs),
                             b"nanos" => Ok(Field::Nanos),
                             _ => {
-                                let value = crate::__private::from_utf8_lossy(value);
+                                let value = private::string::from_utf8_lossy(value);
                                 Err(Error::unknown_field(&*value, FIELDS))
                             }
                         }
@@ -2465,6 +2464,7 @@ mod range {
     use crate::lib::*;
 
     use crate::de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
+    use crate::private;
 
     pub const FIELDS: &[&str] = &["start", "end"];
 
@@ -2510,7 +2510,7 @@ mod range {
                         b"start" => Ok(Field::Start),
                         b"end" => Ok(Field::End),
                         _ => {
-                            let value = crate::__private::from_utf8_lossy(value);
+                            let value = private::string::from_utf8_lossy(value);
                             Err(Error::unknown_field(&*value, FIELDS))
                         }
                     }
@@ -2623,6 +2623,7 @@ mod range_from {
     use crate::lib::*;
 
     use crate::de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
+    use crate::private;
 
     pub const FIELDS: &[&str] = &["start"];
 
@@ -2665,7 +2666,7 @@ mod range_from {
                     match value {
                         b"start" => Ok(Field::Start),
                         _ => {
-                            let value = crate::__private::from_utf8_lossy(value);
+                            let value = private::string::from_utf8_lossy(value);
                             Err(Error::unknown_field(&*value, FIELDS))
                         }
                     }
@@ -2761,6 +2762,7 @@ mod range_to {
     use crate::lib::*;
 
     use crate::de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
+    use crate::private;
 
     pub const FIELDS: &[&str] = &["end"];
 
@@ -2803,7 +2805,7 @@ mod range_to {
                     match value {
                         b"end" => Ok(Field::End),
                         _ => {
-                            let value = crate::__private::from_utf8_lossy(value);
+                            let value = private::string::from_utf8_lossy(value);
                             Err(Error::unknown_field(&*value, FIELDS))
                         }
                     }
@@ -2975,6 +2977,8 @@ where
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#[cfg(feature = "result")]
+#[cfg_attr(docsrs, doc(cfg(feature = "result")))]
 impl<'de, T, E> Deserialize<'de> for Result<T, E>
 where
     T: Deserialize<'de>,
